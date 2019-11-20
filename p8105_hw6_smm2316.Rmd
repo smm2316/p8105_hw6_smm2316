@@ -24,3 +24,23 @@ scale_fill_discrete = scale_fill_viridis_d
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
 
+### Problem 1
+
+```{r read and tidy}
+birthweight = read_csv("./data/birthweight.csv")
+
+birthweight = 
+  birthweight %>%
+  remove_missing() %>%
+  mutate(
+    babysex = factor(babysex),
+    babysex = recode(babysex, "1" = "male", "2" = "female"),
+    frace = factor (frace),
+    frace = recode(frace, "1" = "white", "2" = "black", "3" = "asian", "4" = "puerto rican", "8" = "other", "9" = "unkown"),
+    malform = factor(malform), 
+    malform = recode(malform, "0" = "absent", "1" = "present"),
+    mrace = factor(mrace), 
+    mrace = recode(mrace, "1" = "white", "2" = "black", "3" = "asian", "4" = "puerto rican", "8" = "other")
+  )
+```
+
