@@ -56,8 +56,10 @@ birthweight %>%
           labs (x = "Prediction", y = "Residual", title = "Residuals by Prediction of Proposed Birthweight Model")
 
 comp_model1 = lm(bwt ~ gaweeks + blength, data = birthweight)
-comp_model2 = lm(bwt ~ babysex * blength * bhead, data = birthweight)
+comp_model2 = lm(bwt ~ bhead + blength + babysex +  bhead*blength + bhead*babysex + blength*babysex + bhead*blength*babysex, data = birthweight)
 ```
+
+The model proposed includes variables known to be related to birthweight. 
 
 ```{r Cross Validation}
 cv_df = 
@@ -83,9 +85,11 @@ pivot_longer(
 cv_plot 
 ```
 
+The cross validation plots indicate that model 3 has the lowest rmse and is the best model of birthweight of the three models proposed. 
+
 ### Problem 2
 
-```{r}
+```{r problem 2}
 weather_df = 
   rnoaa::meteo_pull_monitors(
     c("USW00094728"),
@@ -116,21 +120,35 @@ b0b1 =
        values_from = estimate
     ) %>% 
     rename(beta1 = tmin, beta0 = `(Intercept)`) %>% 
-   mutate(log = log(beta0*beta1)) %>%
+   mutate(log = log(beta0*beta1)) 
+
+b0b1 %>%    
   ggplot(aes(x = log)) + 
-  geom_density()
+  geom_density() + 
+  labs(x = "Log(B0*B1)", y = "Density")
+```
 
-b0b1
+The plot of the log(B0B1) density shows a relatively normal distribution with some abnormality in the peak.
 
+
+```{r R2 plot}
 r2 = 
   bootstraps %>%
   select(r2) %>%
-  unnest(r2) %>%
-  ggplot(aes(x = r.squared)) +
-           geom_density()
+  unnest(r2)
 
-r2
+r2 %>%    
+  ggplot(aes(x = r.squared)) +
+  geom_density() +
+  labs(x = "R Squared", y = "Density")
 ```
 
+The plot of the r squared density shows a normal distribution with a slight left skew. 
 
+```{r CIs}
+quantile(pull(b0b1, log), probs =c(0.025, 0.975))
+quantile(pull(r2, r.squared), probs =c(0.025, 0.975))
+```
+The 95% confidence interval for the log(B0B1) is 1.97 to 2.06. 
+The 95% confidence interval for the r-squared is 0.89 to 0.93. 
 
