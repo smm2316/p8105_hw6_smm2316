@@ -8,6 +8,7 @@ output: github_document
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(viridis)
+library(modelr)
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
@@ -31,7 +32,7 @@ birthweight = read_csv("./data/birthweight.csv")
 
 birthweight = 
   birthweight %>%
-  remove_missing() %>%
+  drop_na() %>%
   mutate(
     babysex = factor(babysex),
     babysex = recode(babysex, "1" = "male", "2" = "female"),
@@ -42,5 +43,19 @@ birthweight =
     mrace = factor(mrace), 
     mrace = recode(mrace, "1" = "white", "2" = "black", "3" = "asian", "4" = "puerto rican", "8" = "other")
   )
+```
+
+```{r model building}
+bw_model = lm(bwt ~ gaweeks + blength + fincome + wtgain, data = birthweight)
+
+birthweight %>%
+  add_residuals(bw_model) %>%
+  add_predictions(bw_model) %>%
+  ggplot(aes(x = pred, y = resid)) +
+          geom_point() +
+          labs (x = "Prediction", y = "Residual", title = "Residuals by Prediction of Proposed Birthweight Model")
+
+comp_model1 = lm(bwt ~ gaweeks + blength, data = birthweight)
+comp_model2 = lm(bwt ~ babysex * blength * bhead, data = birthweight)
 ```
 
