@@ -59,3 +59,31 @@ comp_model1 = lm(bwt ~ gaweeks + blength, data = birthweight)
 comp_model2 = lm(bwt ~ babysex * blength * bhead, data = birthweight)
 ```
 
+```{r Cross Validation}
+cv_df = 
+  crossv_mc(birthweight, 100)
+
+cv_df = cv_df %>% 
+  mutate(bw_model  = map(train, ~lm(bwt ~ gaweeks + blength + fincome + wtgain, data = .x)),
+         comp_model1  = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
+         comp_model2  = map(train, ~lm(bwt ~ bhead + blength + babysex +  bhead*blength + bhead*babysex + blength*babysex + bhead*blength*babysex, data = .x))) %>% 
+  mutate(rmse_1 = map2_dbl(bw_model, test, ~modelr::rmse(model = .x, data = .y)),
+         rmse_2 = map2_dbl(comp_model1, test, ~modelr::rmse(model = .x, data = .y)),
+         rmse_3 = map2_dbl(comp_model2, test, ~modelr::rmse(model = .x, data = .y)))
+
+cv_plot = cv_df %>% 
+  select(starts_with("rmse")) %>% 
+pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = model, y = rmse)) + geom_violin()
+cv_plot 
+```
+
+
+
+
+
