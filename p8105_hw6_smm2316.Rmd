@@ -83,7 +83,54 @@ pivot_longer(
 cv_plot 
 ```
 
+### Problem 2
 
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+
+bootstraps = 
+  weather_df %>%
+  bootstrap(n = 5000) %>%
+  mutate(
+    model = map(strap, ~lm(tmax ~ tmin, data = .x)), 
+    b0b1 = map(model, broom::tidy),
+    r2 = map(model, broom::glance))
+
+b0b1 = 
+  bootstraps %>%
+    select(-strap, -model, -r2) %>% 
+    unnest(b0b1) %>% 
+    select(-std.error, -statistic, -p.value) %>%
+    pivot_wider(
+       names_from = term,
+       values_from = estimate
+    ) %>% 
+    rename(beta1 = tmin, beta0 = `(Intercept)`) %>% 
+   mutate(log = log(beta0*beta1)) %>%
+  ggplot(aes(x = log)) + 
+  geom_density()
+
+b0b1
+
+r2 = 
+  bootstraps %>%
+  select(r2) %>%
+  unnest(r2) %>%
+  ggplot(aes(x = r.squared)) +
+           geom_density()
+
+r2
+```
 
 
 
